@@ -32,7 +32,7 @@
 			    width: 200px;
 			    height: 40px;
 			    margin-left: 75px;
-			    font-size: 22px;
+			    font-size: 20px;
 			    color: white;
 		}
 		#img-body {
@@ -96,13 +96,17 @@
 	<body>
 		<div id="insite">
 			<div id='mnu-login'>
-				<button id="btn-dlg-login" onClick="switchPopupView(0)">Log in</button>
-				<button id="btn-dlg-reg" onClick="switchPopupView(1)">Register</button>
-				<button id="btn-dlg-reset-pwd" onClick="switchPopupView(2)">Reset password</button>
+				<button id="btn-dlg-login" onClick="switchPopupView(0)">LOG IN</button>
+				<button id="btn-dlg-reg" onClick="switchPopupView(1)">REGISTER</button>
+				<button id="btn-dlg-reset-pwd" onClick="switchPopupView(2)">RESET PASSWORD</button>
+				<p id="alt-verify" style="text-align:center;"></p>
 			</div>
 			<div id="mnu-logged">
-				<p>Welcome: <span id="p-logged-username"></span></p>
-				<p id="p-logged-email"></p>
+				<!-- <p>Welcome: <span id="p-logged-username"></span></p>
+				<p id="p-logged-email"></p> -->
+				<div id="welc">Welcome: <span id="p-logged-username"></span></div>
+				<button id="btn-stat-addsite" onClick="switchFlowStatus(1)">ADD SITE</button>
+				<button id="btn-stat-review" onClick="switchFlowStatus(2)">REVIEW</button>
 				<button id="btn-signout" onClick="handleSignout()">SIGN OUT</button>
 			</div>
 			<div id="dlg-login" class="ins_popup" style="height:240px;">
@@ -137,12 +141,19 @@
 
 <script>
 	var viewIDs = ['#dlg-login', '#dlg-reg-user', '#dlg-reset-pwd'];
+	var flowStatusNames = ["loggedin", "addsite", "review"];
+	var flowStatus = 0;
+
 	$(document).ready(function() {
 
 		initUserAuth()
 		switchPopupView(-1);
 
 	});
+
+	function switchFlowStatus (stat) {
+		flowStatus = stat;
+	} 
 
 	function switchPopupView(viewNum) {
 		for (var i = 0; i < viewIDs.length; i++) {
@@ -167,11 +178,12 @@
 	    			switchPopupView(-1);
 	    			$('#mnu-login').hide();
 	    			$('#mnu-logged').show();
+	    			$('#alt-verify').html("");
     			}
     			else {
     				$('#mnu-login').show();
     				$('#mnu-logged').hide();
-    				alert ("Your account was not verified by email.\n Please check the verification email in your mainbox.");
+    				$('#alt-verify').html("Your account was not verified by email.\n Please check the verification email in your mainbox.");
     			}
     		}
     		else {
@@ -311,6 +323,8 @@
     }
 
     function handleSignout() {
+    	switchFlowStatus(0);
+    	
     	if (firebase.auth().currentUser) {
 	        // [START signout]
 	        firebase.auth().signOut();
