@@ -1,0 +1,321 @@
+<html>
+	<head>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/3.6.4/firebase.js"></script>
+		<script>
+		  // Initialize Firebase
+		  var config = {
+		    apiKey: "AIzaSyAww79znw0R6SMDvTrgca2Jqgt3EZK7bIQ",
+		    authDomain: "suresite-dfb2d.firebaseapp.com",
+		    databaseURL: "https://suresite-dfb2d.firebaseio.com",
+		    storageBucket: "suresite-dfb2d.appspot.com",
+		    messagingSenderId: "634728179109"
+		  };
+		  firebase.initializeApp(config);
+		</script>
+		<style>
+		#insite {
+			width: 900px;
+			border: 1px solid #555;
+			padding: 15px;
+			margin: auto;
+		}
+		#insite > div {
+			margin-bottom: 40px;	
+		}
+		button {
+			border: 2px solid #6081AF;
+			border-radius: 5px;
+			background-color: #AAA;
+		}
+		#mnu-login button {
+			    width: 200px;
+			    height: 40px;
+			    margin-left: 75px;
+			    font-size: 22px;
+			    color: white;
+		}
+		#img-body {
+			background-image: url("https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/586e8b8a29687f370f77d456/1483639705058/?format=1000w");
+			background-color: #D8E6FC;
+			background-size: cover;
+			background-position: center;
+			width: 800px;
+			height: 500px;
+			margin: 25px auto;
+		}
+		#container-img {
+			width: 850px;
+			height: 550px;
+			border: 1px solid #BBB;
+			margin-left: auto;
+			margin-right: auto;
+		}
+		.ins_popup {
+			border: 1px solid #6081AF;
+		    width: 250px;
+		    background-color: #CCC;
+		    border-radius: 5px;
+		    position: absolute;
+		    margin: auto;
+		    left: 350px;
+		    top: 250px;
+		}
+		.ins_popup input {
+			text-align: center;
+			width: 160px;
+			height: 26px;
+			border: 1px solid #000;
+			background-color: white;
+			border-radius: 3px;
+			font-size: 16px;
+		}
+		.ins_popup p {
+			margin: 10px auto 0 auto;
+			text-align: center;
+		}
+		.ins_popup button {
+			height: 28px;
+		}
+		#btn-login-ggl,#btn-login-fb {
+			width: 170px;
+		}
+		#btn-close-dlg {
+			background-image: url("https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/586f144ebf629abf691ffe70/1483674708451/?format=300w");
+			background-size: cover;
+			background-position: center;
+			width: 30px;
+			height: 30px;
+			cursor: pointer;
+			position: absolute;
+			top: 0;
+			right: 0;
+		}
+		</style>
+	</head>
+	<body>
+		<div id="insite">
+			<div id='mnu-login'>
+				<button id="btn-dlg-login" onClick="switchPopupView(0)">Log in</button>
+				<button id="btn-dlg-reg" onClick="switchPopupView(1)">Register</button>
+				<button id="btn-dlg-reset-pwd" onClick="switchPopupView(2)">Reset password</button>
+			</div>
+			<div id="mnu-logged">
+				<p>Welcome: <span id="p-logged-username"></span></p>
+				<p id="p-logged-email"></p>
+				<button id="btn-signout" onClick="handleSignout()">SIGN OUT</button>
+			</div>
+			<div id="dlg-login" class="ins_popup" style="height:240px;">
+				<p><input type="text" placeholder="Email" id="txt-email"/></p>
+				<p><input type="Password" placeholder="Password" id="txt-pwd"/></p>
+				<p><button id="btn-smb-login" onClick="handleSignin()">Login</button></p>
+				<p><button id="btn-login-ggl" onClick="handleGoogleSignin()">Sign in with Google</button></p>
+				<p><button id="btn-login-fb" onClick="handleFBSignin()">Sign in with Facebook</button></p>
+				<div id="btn-close-dlg" onClick="switchPopupView(-1)"></div>
+			</div>
+			<div id="dlg-reg-user" class="ins_popup" style="height:320px;">
+				<p><input type="text" placeholder="User name" id="txt-reg-name"/></p>
+				<p><input type="text" placeholder="Email" id="txt-reg-email"/></p>
+				<p><input type="Password" placeholder="Password" id="txt-reg-pwd"/></p>
+				<p><input type="Password" placeholder="Reenter password" id="txt-reg-conf"/></p>
+				<p><button id="btn-smb-reg-user" onClick="handleSignup()">Submit</button></p>
+				<div id="btn-close-dlg" onClick="switchPopupView(-1)"></div>
+				<p><button id="btn-login-ggl" onClick="handleGoogleSignin()">Sign up with Google</button></p>
+				<p><button id="btn-login-fb" onClick="handleFBSignin()">Sign up with Facebook</button></p>
+			</div>
+			<div id="dlg-reset-pwd" class="ins_popup" style="height:150px;">
+				<p><input type="email" placeholder="Email" id="txt-re-email"/></p>
+				<p><button id="btn-smb-reg-user" onClick="sendPasswordReset()">Send</button></p>
+				<div id="btn-close-dlg" onClick="switchPopupView(-1)"></div>
+			</div>
+			<div id="container-img">
+				<div id="img-body"></div>
+			</div>
+		</div>
+	</body>
+</html>
+
+<script>
+	var viewIDs = ['#dlg-login', '#dlg-reg-user', '#dlg-reset-pwd'];
+	$(document).ready(function() {
+
+		initUserAuth()
+		switchPopupView(-1);
+
+	});
+
+	function switchPopupView(viewNum) {
+		for (var i = 0; i < viewIDs.length; i++) {
+			if (i == viewNum)
+				$(viewIDs[viewNum]).show();
+			else
+				$(viewIDs[i]).hide();
+		}
+	}
+
+    function initUserAuth() {
+    	firebase.auth().onAuthStateChanged(function(user) {
+    		if (user) {
+    			if (user.emailVerified) {
+    				$('#p-logged-email').html(user.email);
+	    			if (user.displayName) 
+	    				$('#p-logged-username').html(user.displayName);
+	    			else if (user.providerData[0]['displayName']) {
+	    				$('#p-logged-username').html(user.providerData[0]['displayName']);
+	    			}
+
+	    			switchPopupView(-1);
+	    			$('#mnu-login').hide();
+	    			$('#mnu-logged').show();
+    			}
+    			else {
+    				$('#mnu-login').show();
+    				$('#mnu-logged').hide();
+    				alert ("Your account was not verified by email.\n Please check the verification email in your mainbox.");
+    			}
+    		}
+    		else {
+    			$('#mnu-login').show();
+    			$('#mnu-logged').hide();
+    		}
+    	});
+    }
+
+    function handleSignin() {
+    	var email = $('#txt-email').val();
+        var password = $('#txt-pwd').val();
+        if (email.length < 4) {
+        	alert('Please enter an email address.');
+        	return;
+        }
+        if (password.length < 4) {
+        	alert('Please enter a password.');
+        	return;
+        }
+        firebase.auth().signInWithEmailAndPassword(email, password).catch(function(error){
+        	var errorCode = error.code;
+	        var errorMessage = error.message;
+	        
+	        if (errorCode === 'auth/wrong-password') {
+	          alert('Wrong password.');
+	        } else {
+	          alert(errorMessage);
+	        }
+	        console.log(error);
+        });
+    }
+
+    function handleSignup() {
+    	var email = $('#txt-reg-email').val();
+        var password = $('#txt-reg-pwd').val();
+        var confPassword = $('#txt-reg-conf').val();
+        var	username = $('#txt-reg-name').val();
+
+	    if (username.length < 4) {
+	        alert('Please enter a password.');
+	        return;
+	    }
+        if (email.length < 4) {
+	        alert('Please enter an email address.');
+	        return;
+	    }
+	    if (password.length < 4) {
+	        alert('Please enter a password.');
+	        return;
+	    }
+	    if (password != confPassword) {
+	        alert('Please confirm the entered password.');
+	        return;
+	    }
+
+	    firebase.auth().createUserWithEmailAndPassword(email, password).then(function(user) {
+		    // [END createwithemail]
+		    // callSomeFunction(); Optional
+		    // var user = firebase.auth().currentUser;
+		    user.updateProfile({
+		        displayName: username
+		    }).then(function() {
+		        $('#p-logged-username').html(username);
+		        firebase.auth().currentUser.sendEmailVerification().then(function() {
+			        alert('Email Verification Sent!');
+			        switchPopupView(-1);
+			    });
+		    }, function(error) {
+		        console.error(error);
+		    });        
+		}, function(error) {
+		    // Handle Errors here.
+		    var errorCode = error.code;
+		    var errorMessage = error.message;
+		    alert(error.message);
+		});
+    }
+
+    function handleGoogleSignin () {
+    	var provider = new firebase.auth.GoogleAuthProvider();
+    	provider.addScope('https://www.googleapis.com/auth/plus.login');
+    	firebase.auth().signInWithPopup(provider).then(function(result) {
+    		var token = result.credential.accessToken;
+      		var user = result.user;
+      		if (!user.emailVerified) {
+      			firebase.auth().currentUser.sendEmailVerification().then(function() {
+			        alert('Email Verification Sent!');
+			        switchPopupView(-1);
+			    });
+      		}
+    	}).catch(function(error) {
+    		var errorCode = error.code;
+    		if (errorCode === 'auth/account-exists-with-different-credential') {
+	            alert('You have already signed up with a different auth provider for that email.');
+	        } else {
+	            console.error(error);
+	        }
+    	})
+    }
+
+    function handleFBSignin() {
+    	var provider = new firebase.auth.FacebookAuthProvider();
+    	provider.addScope('user_birthday');
+    	firebase.auth().signInWithPopup(provider).then(function(result) {
+        	var token = result.credential.accessToken;
+          	var user = result.user;
+          	if (!user.emailVerified) {
+      			firebase.auth().currentUser.sendEmailVerification().then(function() {
+			        alert('Email Verification Sent!');
+			    });
+      		}
+        }).catch(function(error) {
+            var errorCode = error.code;
+    		if (errorCode === 'auth/account-exists-with-different-credential') {
+	            alert('You have already signed up with a different auth provider for that email.');
+	        } else {
+	            console.error(error);
+	        }
+        });
+    }
+
+    function sendPasswordReset() {
+      	var email =  $('#txt-re-email').val();
+      	firebase.auth().sendPasswordResetEmail(email).then(function() {
+        	alert('Password Reset Email Sent!');
+        }).catch(function(error) {
+        	var errorCode = error.code;
+        	var errorMessage = error.message;
+        	if (errorCode == 'auth/invalid-email') {
+	        	alert(errorMessage);
+	        } else if (errorCode == 'auth/user-not-found') {
+	        	alert(errorMessage);
+	        }
+	        console.log(error);
+      });
+    }
+
+    function handleSignout() {
+    	if (firebase.auth().currentUser) {
+	        // [START signout]
+	        firebase.auth().signOut();
+	        // [END signout]
+	     }
+    }
+
+</script>
