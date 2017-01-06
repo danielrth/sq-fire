@@ -50,6 +50,7 @@
 			border: 1px solid #BBB;
 			margin-left: auto;
 			margin-right: auto;
+			position: relative;
 		}
 		.ins_popup {
 			border: 1px solid #6081AF;
@@ -91,6 +92,14 @@
 			top: 0;
 			right: 0;
 		}
+		#site-pin {
+			background-image: url("red_pin.png");
+			background-size: cover;
+			background-position: center;
+			width: 25px;
+			height: 25px;
+			position: absolute;
+		}
 		</style>
 	</head>
 	<body>
@@ -104,7 +113,7 @@
 			<div id="mnu-logged">
 				<!-- <p>Welcome: <span id="p-logged-username"></span></p>
 				<p id="p-logged-email"></p> -->
-				<div id="welc">Welcome: <span id="p-logged-username"></span></div>
+				<div id="welc" style="display:inline-block;">Welcome: <span id="p-logged-username"></span></div>
 				<button id="btn-stat-addsite" onClick="switchFlowStatus(1)">ADD SITE</button>
 				<button id="btn-stat-review" onClick="switchFlowStatus(2)">REVIEW</button>
 				<button id="btn-signout" onClick="handleSignout()">SIGN OUT</button>
@@ -132,22 +141,45 @@
 				<p><button id="btn-smb-reg-user" onClick="sendPasswordReset()">Send</button></p>
 				<div id="btn-close-dlg" onClick="switchPopupView(-1)"></div>
 			</div>
+			<div id="dlg-add-site" class="ins_popup" style="height:200px;">
+				<table>
+					<tr>
+					</tr>
+				</table>
+			</div>
 			<div id="container-img">
 				<div id="img-body"></div>
+				<div id="site-pin" style="display:none;"></div>
 			</div>
 		</div>
 	</body>
 </html>
 
 <script>
-	var viewIDs = ['#dlg-login', '#dlg-reg-user', '#dlg-reset-pwd'];
-	var flowStatusNames = ["loggedin", "addsite", "review"];
+	var viewIDs = ['#dlg-login', '#dlg-reg-user', '#dlg-reset-pwd']; //layout IDs for dialogs
+	var flowStatusNames = ["loggedin", "addsite", "review"];	//flow status names
 	var flowStatus = 0;
+	var imageMargin = 25;
 
 	$(document).ready(function() {
 
 		initUserAuth()
 		switchPopupView(-1);
+
+		$('#img-body').click(function (e) {
+			if (flowStatus == 1) //flow status for adding site
+			{
+				//real data to store is offsetX, offsetY
+				var posX = e.offsetX + imageMargin - $('#site-pin').width()/2,
+            	posY = e.offsetY + imageMargin - $('#site-pin').height()/2;
+
+            	//posX, posY are values for showing pin
+            	console.log('posX:' + posX + ' posY:' + posY);
+            	$('#site-pin').show();
+            	$('#site-pin').css('left', posX);
+            	$('#site-pin').css('top', posY);
+			}
+		});
 
 	});
 
@@ -156,6 +188,7 @@
 	} 
 
 	function switchPopupView(viewNum) {
+		//hide/show popup dialogs
 		for (var i = 0; i < viewIDs.length; i++) {
 			if (i == viewNum)
 				$(viewIDs[viewNum]).show();
@@ -165,6 +198,7 @@
 	}
 
     function initUserAuth() {
+    	//when user auth status changed
     	firebase.auth().onAuthStateChanged(function(user) {
     		if (user) {
     			if (user.emailVerified) {
@@ -241,9 +275,7 @@
 	    }
 
 	    firebase.auth().createUserWithEmailAndPassword(email, password).then(function(user) {
-		    // [END createwithemail]
-		    // callSomeFunction(); Optional
-		    // var user = firebase.auth().currentUser;
+
 		    user.updateProfile({
 		        displayName: username
 		    }).then(function() {
@@ -256,7 +288,6 @@
 		        console.error(error);
 		    });        
 		}, function(error) {
-		    // Handle Errors here.
 		    var errorCode = error.code;
 		    var errorMessage = error.message;
 		    alert(error.message);
@@ -324,7 +355,7 @@
 
     function handleSignout() {
     	switchFlowStatus(0);
-    	
+
     	if (firebase.auth().currentUser) {
 	        // [START signout]
 	        firebase.auth().signOut();
