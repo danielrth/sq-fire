@@ -2,6 +2,8 @@
 	<head>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 		<script src="https://www.gstatic.com/firebasejs/3.6.4/firebase.js"></script>
+		<script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.js"></script>
 		<script>
 		  // Initialize Firebase
 		  var config = {
@@ -13,6 +15,9 @@
 		  };
 		  firebase.initializeApp(config);
 		</script>
+		
+		<link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css">
+		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.css">
 		<style>
 		#insite {
 			width: 900px;
@@ -27,13 +32,13 @@
 			border: 2px solid #6081AF;
 			border-radius: 5px;
 			background-color: #AAA;
+			font-size: 18px;
+		    color: white;
 		}
 		#mnu-login button {
-			    width: 200px;
-			    height: 40px;
-			    margin-left: 75px;
-			    font-size: 20px;
-			    color: white;
+		    width: 200px;
+		    height: 40px;
+		    margin-left: 75px;
 		}
 		#img-body {
 			background-image: url("https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/586e8b8a29687f370f77d456/1483639705058/?format=1000w");
@@ -51,6 +56,7 @@
 			margin-left: auto;
 			margin-right: auto;
 			position: relative;
+			box-shadow: 1px 1px 5px #888888;
 		}
 		.ins_popup {
 			border: 1px solid #6081AF;
@@ -62,7 +68,7 @@
 		    left: 350px;
 		    top: 250px;
 		}
-		.ins_popup input {
+		.ins_popup input:not([type='checkbox']) {
 			text-align: center;
 			width: 160px;
 			height: 26px;
@@ -71,6 +77,10 @@
 			border-radius: 3px;
 			font-size: 16px;
 		}
+		.ins_popup input[type='checkbox'] {
+			float: right;
+			font-size: 200%;
+		}
 		.ins_popup p {
 			margin: 10px auto 0 auto;
 			text-align: center;
@@ -78,8 +88,27 @@
 		.ins_popup button {
 			height: 28px;
 		}
+		.ins_popup select {
+			width: 100px;
+		    height: 26px;
+		    font-size: 16px;
+		}
+		.ins_popup div {
+			border: 1px solid #000;
+			border-radius: 4px;
+			height: 26px;
+			background-color: white;
+		}
+		.ins_popup td {
+			height: 35px;
+			text-align: center;
+		}
+		.ins_popup td button {
+			width: 100px;
+		}
 		#btn-login-ggl,#btn-login-fb {
-			width: 170px;
+			width: 200px;
+			font-size: 14px;
 		}
 		#btn-close-dlg {
 			background-image: url("https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/586f144ebf629abf691ffe70/1483674708451/?format=300w");
@@ -93,7 +122,7 @@
 			right: 0;
 		}
 		#site-pin {
-			background-image: url("red_pin.png");
+			background-image: url("https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/58721096db29d687bc48e5cf/1483870363388/?format=100w");
 			background-size: cover;
 			background-position: center;
 			width: 25px;
@@ -113,10 +142,14 @@
 			<div id="mnu-logged">
 				<!-- <p>Welcome: <span id="p-logged-username"></span></p>
 				<p id="p-logged-email"></p> -->
-				<div id="welc" style="display:inline-block;">Welcome: <span id="p-logged-username"></span></div>
+				<button id="welc" style="display:inline-block;">Welcome: <span id="p-logged-username"></span></button>
 				<button id="btn-stat-addsite" onClick="switchFlowStatus(1)">ADD SITE</button>
 				<button id="btn-stat-review" onClick="switchFlowStatus(2)">REVIEW</button>
 				<button id="btn-signout" onClick="handleSignout()">SIGN OUT</button>
+			</div>
+			<div id="container-img">
+				<div id="img-body"></div>
+				<div id="site-pin" style="display:none;"></div>
 			</div>
 			<div id="dlg-login" class="ins_popup" style="height:240px;">
 				<p><input type="text" placeholder="Email" id="txt-email"/></p>
@@ -141,43 +174,94 @@
 				<p><button id="btn-smb-reg-user" onClick="sendPasswordReset()">Send</button></p>
 				<div id="btn-close-dlg" onClick="switchPopupView(-1)"></div>
 			</div>
-			<div id="dlg-add-site" class="ins_popup" style="height:200px;">
+			<div id="dlg-add-site" class="ins_popup" style="height:200px;padding:10px;">
 				<table>
 					<tr>
+						<td><input text="text" id="txt-in-asbg" style="width:120px;" maxlength=3/></td>
+						<td><select id="sel-in-unit"></select></td>
+					</tr>
+					<tr>
+						<td colspan=2><input id="txt-in-time" style="width:240px;margin:auto;"/></td>
+					</tr>
+					<tr>
+						<td><div><span>Painful</span><input type="checkbox" id="chk-in-painful"></div></td>
+						<td><div><span>Bleeding</span><input type="checkbox" id="chk-in-bleeding"></div></td>
+					</tr>
+					<tr>
+						<td><div><span>Rash</span><input type="checkbox" id="chk-in-rash"></div></td>
+						<td><div><span>Erratic BG</span><input type="checkbox" id="chk-in-erratic"></div></td>
+					</tr>
+					<tr>
+						<td><button id="btn-in-save" onClick="saveNewSite()">SAVE</button></td>
+						<td><button id="btn-in-cancel" onClick="cancelNewSite()">CANCEL</button></td>
 					</tr>
 				</table>
 			</div>
-			<div id="container-img">
-				<div id="img-body"></div>
-				<div id="site-pin" style="display:none;"></div>
+			<div>
+				<table border=1 id="tbl-user-sites">
+					<thead>
+						<tr>
+							<th>Date</th><th>ASBG</th><th>mg/dl</th><th>Pain</th><th>Bleeding</th><th>Rash</th><th>Erratic BG</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
 			</div>
 		</div>
 	</body>
 </html>
 
 <script>
-	var viewIDs = ['#dlg-login', '#dlg-reg-user', '#dlg-reset-pwd']; //layout IDs for dialogs
+	var viewIDs = ['#dlg-login', '#dlg-reg-user', '#dlg-reset-pwd', '#dlg-add-site']; //layout IDs for dialogs
+	var asbgUnits = ['mg/dl', 'mmol/L'];
 	var flowStatusNames = ["loggedin", "addsite", "review"];	//flow status names
 	var flowStatus = 0;
 	var imageMargin = 25;
+	var newSiteOffsetX = -50;
+	var newSiteOffsetY = -50;
+	var editingPin = null;
+	var userSitesData = [];
 
 	$(document).ready(function() {
 
 		initUserAuth()
 		switchPopupView(-1);
 
+		$.each(asbgUnits, function(key, value) {   
+		     $('#sel-in-unit')
+		         .append($("<option></option>")
+		                    .attr("value",key)
+		                    .text(value)); 
+		});
+
+		$('#txt-in-asbg').keyup(function () { 
+		    this.value = this.value.replace(/[^0-9\.]/g,'');
+		});
+
+		$('#txt-in-time').datetimepicker({
+			controlType: 'select',
+			oneLine: true,
+			timeFormat: 'hh:mm tt'
+		});
+
 		$('#img-body').click(function (e) {
 			if (flowStatus == 1) //flow status for adding site
 			{
 				//real data to store is offsetX, offsetY
+				newSiteOffsetX = e.offsetX;
+				newSiteOffsetY = e.offsetY;
+            	//posX, posY are values for showing pin
 				var posX = e.offsetX + imageMargin - $('#site-pin').width()/2,
             	posY = e.offsetY + imageMargin - $('#site-pin').height()/2;
 
-            	//posX, posY are values for showing pin
             	console.log('posX:' + posX + ' posY:' + posY);
-            	$('#site-pin').show();
-            	$('#site-pin').css('left', posX);
-            	$('#site-pin').css('top', posY);
+            	editingPin = $('#site-pin').clone();
+            	editingPin.appendTo('#container-img');
+            	editingPin.show();
+            	editingPin.css('left', posX);
+            	editingPin.css('top', posY);
+
+            	$('#dlg-add-site').show();
 			}
 		});
 
@@ -202,6 +286,7 @@
     	firebase.auth().onAuthStateChanged(function(user) {
     		if (user) {
     			if (user.emailVerified) {
+    				// console.log(user);
     				$('#p-logged-email').html(user.email);
 	    			if (user.displayName) 
 	    				$('#p-logged-username').html(user.displayName);
@@ -213,6 +298,8 @@
 	    			$('#mnu-login').hide();
 	    			$('#mnu-logged').show();
 	    			$('#alt-verify').html("");
+
+	    			loadUserSites();
     			}
     			else {
     				$('#mnu-login').show();
@@ -355,6 +442,8 @@
 
     function handleSignout() {
     	switchFlowStatus(0);
+    	$('#tbl-user-sites tbody').html('');
+    	userSitesData = [];
 
     	if (firebase.auth().currentUser) {
 	        // [START signout]
@@ -363,4 +452,51 @@
 	     }
     }
 
+    function saveNewSite() {
+    	if (!$('#txt-in-asbg').val()) {
+    		alert ("Please input valid ASBG value.");
+    		return;
+    	}
+
+    	if (!$('#txt-in-time').val()) {
+    		alert ("Please input valid date and time value.");
+    		return;
+    	}
+
+    	var asbgVal = $('#sel-in-unit').val() == 0 ? $('#txt-in-asbg').val() : $('#txt-in-asbg').val() * 18;
+    	var newSiteData = {
+    		'userid': firebase.auth().currentUser.uid,
+    		'locX': newSiteOffsetX,
+    		'locY': newSiteOffsetY,
+    		'asbg': asbgVal,
+    		'injtime': $('#txt-in-time').datetimepicker('getDate').getTime(),
+    		'isPainful': $('#chk-in-painful').is(':checked') ? 'yes' : 'no',
+    		'isBleeding': $('#chk-in-bleeding').is(':checked') ? 'yes' : 'no',
+    		'isRash': $('#chk-in-rash').is(':checked') ? 'yes' : 'no',
+    		'isErratic': $('#chk-in-erratic').is(':checked') ? 'yes' : 'no'
+    	};
+
+    	var newPostKey = firebase.database().ref().child('sites').push().key;
+		var updates = {};
+		updates['/sites/' + newPostKey] = newSiteData;
+
+		console.log(firebase.database().ref().update(updates));
+		switchPopupView(-1);
+    }
+
+    function cancelNewSite() {
+    	editingPin.remove();
+    	switchPopupView(-1);
+    }
+
+    function loadUserSites () {
+    	firebase.database().ref().child('sites').orderByChild("userid").equalTo(firebase.auth().currentUser.uid).on("child_added", function(snapshot) {
+		  		// console.log(snapshot.val());
+		  		var injtime = new Date(snapshot.val().injtime);
+		  		injtime.toISOString();
+		  		userSitesData.push(snapshot.val());
+		  		var trHtml = "<tr><td>" + injtime  + "</td><td>" + snapshot.val().asbg + "</td><td>" + "mg/dl" + "</td><td>" + snapshot.val().isPainful + "</td><td>" + snapshot.val().isBleeding + "</td><td>" + snapshot.val().isRash + "</td><td>" + snapshot.val().isErratic + "</td></tr>";
+		  		$('#tbl-user-sites tbody').html($('#tbl-user-sites tbody').html() + trHtml);
+		});
+    }
 </script>
