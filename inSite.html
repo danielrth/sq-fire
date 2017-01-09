@@ -35,6 +35,9 @@
 			font-size: 18px;
 		    color: white;
 		}
+		button.active {
+			background-color: #777;
+		}
 		#mnu-login button {
 		    width: 200px;
 		    height: 40px;
@@ -177,7 +180,7 @@
 			<div id="dlg-add-site" class="ins_popup" style="height:200px;padding:10px;">
 				<table>
 					<tr>
-						<td><input text="text" id="txt-in-asbg" style="width:120px;" maxlength=3/></td>
+						<td><input text="text" id="txt-in-asbg" style="width:120px;" maxlength=3 placeholder="ASBG value" /></td>
 						<td><select id="sel-in-unit"></select></td>
 					</tr>
 					<tr>
@@ -241,27 +244,26 @@
 		$('#txt-in-time').datetimepicker({
 			controlType: 'select',
 			oneLine: true,
-			timeFormat: 'hh:mm tt'
+			dateFormat: 'M.d yy,', 
+			timeFormat: 'h:mm tt'
 		});
 
 		$('#img-body').click(function (e) {
+			if ($('#dlg-add-site').is(":visible")) {
+				return;
+			}
 			if (flowStatus == 1) //flow status for adding site
 			{
 				//real data to store is offsetX, offsetY
 				newSiteOffsetX = e.offsetX;
 				newSiteOffsetY = e.offsetY;
-            	//posX, posY are values for showing pin
-				var posX = e.offsetX + imageMargin - $('#site-pin').width()/2,
-            	posY = e.offsetY + imageMargin - $('#site-pin').height()/2;
 
-            	console.log('posX:' + posX + ' posY:' + posY);
-            	editingPin = $('#site-pin').clone();
-            	editingPin.appendTo('#container-img');
-            	editingPin.show();
-            	editingPin.css('left', posX);
-            	editingPin.css('top', posY);
-
+            	addPinOnImage(newSiteOffsetX, newSiteOffsetY);
+            	
             	$('#dlg-add-site').show();
+            	$('#dlg-add-site').css('top', newSiteOffsetY + 200);
+            	// $('#dlg-add-site').css('left', newSiteOffsetX);
+            	$('#txt-in-time').datetimepicker('setDate', (new Date()) );
 			}
 		});
 
@@ -269,6 +271,12 @@
 
 	function switchFlowStatus (stat) {
 		flowStatus = stat;
+		if (stat == 1) {
+			$('#btn-stat-addsite').addClass('active');
+		}
+		else {
+			$('#btn-stat-addsite').removeClass('active');	
+		}
 	} 
 
 	function switchPopupView(viewNum) {
@@ -492,11 +500,34 @@
     function loadUserSites () {
     	firebase.database().ref().child('sites').orderByChild("userid").equalTo(firebase.auth().currentUser.uid).on("child_added", function(snapshot) {
 		  		// console.log(snapshot.val());
-		  		var injtime = new Date(snapshot.val().injtime);
-		  		injtime.toISOString();
+		  		var injtime = formatDate (new Date(snapshot.val().injtime));
 		  		userSitesData.push(snapshot.val());
 		  		var trHtml = "<tr><td>" + injtime  + "</td><td>" + snapshot.val().asbg + "</td><td>" + "mg/dl" + "</td><td>" + snapshot.val().isPainful + "</td><td>" + snapshot.val().isBleeding + "</td><td>" + snapshot.val().isRash + "</td><td>" + snapshot.val().isErratic + "</td></tr>";
 		  		$('#tbl-user-sites tbody').html($('#tbl-user-sites tbody').html() + trHtml);
+
+		  		addPinOnImage(snapshot.val().locX, snapshot.val().locY);
 		});
+    }
+
+    function formatDate (dateVar) {
+    	var monthNames = [
+		  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+		];
+
+		var day = dateVar.getDate();
+		var monthIndex = dateVar.getMonth();
+		var year = dateVar.getFullYear();
+
+		return monthNames[monthIndex] + '. ' + day + ', ' + year;
+    }
+    function addPinOnImage(offsetX, offsetY) {
+    	var posX = offsetX + imageMargin - $('#site-pin').width()/2,
+            posY = offsetY + imageMargin - $('#site-pin').height()/2;
+
+    	editingPin = $('#site-pin').clone();
+    	editingPin.appendTo('#container-img');
+    	editingPin.show();
+    	editingPin.css('left', posX);
+    	editingPin.css('top', posY);
     }
 </script>
