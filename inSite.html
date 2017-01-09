@@ -499,13 +499,27 @@
 
     function loadUserSites () {
     	firebase.database().ref().child('sites').orderByChild("userid").equalTo(firebase.auth().currentUser.uid).on("child_added", function(snapshot) {
-		  		// console.log(snapshot.val());
-		  		var injtime = formatDate (new Date(snapshot.val().injtime));
+		  		
 		  		userSitesData.push(snapshot.val());
-		  		var trHtml = "<tr><td>" + injtime  + "</td><td>" + snapshot.val().asbg + "</td><td>" + "mg/dl" + "</td><td>" + snapshot.val().isPainful + "</td><td>" + snapshot.val().isBleeding + "</td><td>" + snapshot.val().isRash + "</td><td>" + snapshot.val().isErratic + "</td></tr>";
+
+		  		var injtime = formatDate (new Date(snapshot.val().injtime));
+		  		var trHtml = 
+		  			"<tr id=trsite_" + snapshot.key + "><td>" + injtime  + "</td><td>" 
+		  			+ snapshot.val().asbg + "</td><td>" 
+		  			+ "mg/dl" + "</td><td>" 
+		  			+ getCheckboxHTML(snapshot.val().isPainful) + "</td><td>" 
+		  			+ getCheckboxHTML(snapshot.val().isBleeding) + "</td><td>" 
+		  			+ getCheckboxHTML(snapshot.val().isRash) + "</td><td>" 
+		  			+ getCheckboxHTML(snapshot.val().isErratic) + "</td>" 
+		  			+ "<td><a href='#' onClick=removeSite('"+ snapshot.key +"') >DELETE</a></td></tr>";
 		  		$('#tbl-user-sites tbody').html($('#tbl-user-sites tbody').html() + trHtml);
 
 		  		addPinOnImage(snapshot.val().locX, snapshot.val().locY);
+		});
+
+		firebase.database().ref().child('sites').orderByChild("userid").equalTo(firebase.auth().currentUser.uid).on("child_removed", function(snapshot) {
+			var trSite = $('#trsite_' + snapshot.key);
+			trSite.remove();
 		});
     }
 
@@ -520,6 +534,11 @@
 
 		return monthNames[monthIndex] + '. ' + day + ', ' + year;
     }
+
+    function getCheckboxHTML(varBool) {
+    	return "<input type='checkbox' onclick='return false;' " + (varBool=='yes'?'checked':'') + " />";
+    }
+
     function addPinOnImage(offsetX, offsetY) {
     	var posX = offsetX + imageMargin - $('#site-pin').width()/2,
             posY = offsetY + imageMargin - $('#site-pin').height()/2;
@@ -529,5 +548,13 @@
     	editingPin.show();
     	editingPin.css('left', posX);
     	editingPin.css('top', posY);
+    }
+
+    function removeSite(siteKey) {
+    	if (confirm("Are you sure to delete this site?")) {
+    		var updates = {};
+			updates['/sites/' + siteKey] = null;
+			console.log(firebase.database().ref().update(updates));
+    	}
     }
 </script>
