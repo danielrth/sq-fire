@@ -1,0 +1,114 @@
+
+#insite {
+	width: 900px;
+	border: 1px solid #555;
+	padding: 15px;
+	margin: auto;
+}
+#insite > div {
+	margin-bottom: 40px;	
+}
+button {
+	border: 2px solid #6081AF;
+	border-radius: 5px;
+	background-color: #AAA;
+	font-size: 18px;
+    color: white;
+}
+button.active {
+	background-color: #777;
+}
+#mnu-login button {
+    width: 200px;
+    height: 40px;
+    margin-left: 75px;
+}
+#img-body {
+	background-image: url("https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/586e8b8a29687f370f77d456/1483639705058/?format=1000w");
+	background-color: #D8E6FC;
+	background-size: cover;
+	background-position: center;
+	width: 800px;
+	height: 500px;
+	margin: 25px auto;
+}
+#container-img {
+	width: 850px;
+	height: 550px;
+	border: 1px solid #BBB;
+	margin-left: auto;
+	margin-right: auto;
+	position: relative;
+	box-shadow: 1px 1px 5px #888888;
+}
+.ins_popup {
+	border: 1px solid #6081AF;
+    width: 250px;
+    background-color: #CCC;
+    border-radius: 5px;
+    position: absolute;
+    margin: auto;
+    left: 350px;
+    top: 250px;
+}
+.ins_popup input:not([type='checkbox']) {
+	text-align: center;
+	width: 160px;
+	height: 26px;
+	border: 1px solid #000;
+	background-color: white;
+	border-radius: 3px;
+	font-size: 16px;
+}
+.ins_popup input[type='checkbox'] {
+	float: right;
+	font-size: 200%;
+}
+.ins_popup p {
+	margin: 10px auto 0 auto;
+	text-align: center;
+}
+.ins_popup button {
+	height: 28px;
+}
+.ins_popup select {
+	width: 100px;
+    height: 26px;
+    font-size: 16px;
+}
+.ins_popup div {
+	border: 1px solid #000;
+	border-radius: 4px;
+	height: 26px;
+	background-color: white;
+}
+.ins_popup td {
+	height: 35px;
+	text-align: center;
+}
+.ins_popup td button {
+	width: 100px;
+}
+#btn-login-ggl,#btn-login-fb {
+	width: 200px;
+	font-size: 14px;
+}
+#btn-close-dlg {
+	background-image: url("https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/586f144ebf629abf691ffe70/1483674708451/?format=300w");
+	background-size: cover;
+	background-position: center;
+	width: 30px;
+	height: 30px;
+	cursor: pointer;
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+#site-pin-smp {
+	background-image: url("https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/58721096db29d687bc48e5cf/1483870363388/?format=100w");
+	background-size: cover;
+	background-position: center;
+	width: 25px;
+	height: 25px;
+	position: absolute;
+}
