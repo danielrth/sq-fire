@@ -107,6 +107,131 @@
     	});
     }
 
+    function loadUserSites (startTime, endTime) {
+    	firebase.database().ref().child('sites')
+    	.orderByChild("userid").equalTo(firebase.auth().currentUser.uid)
+    	.orderByChild('injtime').startAt(startTime).endAt(endTime)
+    	.on("child_added", function(snapshot) {
+		  		
+		  		userSitesData[snapshot.key] = snapshot.val();
+
+		  		var injtime = formatDate (new Date(snapshot.val().injtime));
+		  		var trHtml = 
+		  			"<tr id=trsite_" + snapshot.key + " onClick=editSiteRecord(this.id)><td>" + injtime  + "</td><td>" 
+		  			+ snapshot.val().asbg + "</td><td>" 
+		  			+ "mg/dl" + "</td><td>" 
+		  			+ getCheckboxHTML(snapshot.val().isPainful) + "</td><td>" 
+		  			+ getCheckboxHTML(snapshot.val().isBleeding) + "</td><td>" 
+		  			+ getCheckboxHTML(snapshot.val().isRash) + "</td><td>" 
+		  			+ getCheckboxHTML(snapshot.val().isErratic) + "</td>" 
+		  			+ "<td><a href='#' onClick=removeSite('"+ snapshot.key +"') >DELETE</a></td></tr>";
+		  		// $('#tbl-user-sites tbody').html($('#tbl-user-sites tbody').html() + trHtml);
+		  		$('#tbl-user-sites tbody').append(trHtml);
+
+		  		addPinOnImage(snapshot.val().locX, snapshot.val().locY);
+		});
+
+		firebase.database().ref().child('sites').orderByChild("userid").equalTo(firebase.auth().currentUser.uid).on("child_removed", function(snapshot) {
+
+			delete userSitesData[snapshot.key];
+
+			var trSite = $('#trsite_' + snapshot.key);
+			trSite.remove();
+		});
+
+		firebase.database().ref().child('sites').orderByChild("userid").equalTo(firebase.auth().currentUser.uid).on("child_changed", function(snapshot) {
+
+			userSitesData[snapshot.key] = snapshot.val();
+			var tdsInChangeRow = $('#trsite_' + snapshot.key + ' td');
+			tdsInChangeRow[1].innerHTML = snapshot.val().asbg;
+			tdsInChangeRow[3].innerHTML = getCheckboxHTML(snapshot.val().isPainful);
+			tdsInChangeRow[4].innerHTML = getCheckboxHTML(snapshot.val().isBleeding);
+			tdsInChangeRow[5].innerHTML = getCheckboxHTML(snapshot.val().isRash);
+			tdsInChangeRow[6].innerHTML = getCheckboxHTML(snapshot.val().isErratic);
+		});
+    }
+/*----------------------start of button handlers--------------------*/
+    function saveNewSite() {
+    	if (!$('#txt-in-asbg').val()) {
+    		alert ("Please input valid ASBG value.");
+    		return;
+    	}
+
+    	if (!$('#txt-in-time').val()) {
+    		alert ("Please input valid date and time value.");
+    		return;
+    	}
+
+    	var asbgVal = $('#sel-in-unit').val() == 0 ? $('#txt-in-asbg').val() : $('#txt-in-asbg').val() * 18;
+    	
+    	var newSiteData = {
+    		'userid': firebase.auth().currentUser.uid,
+    		'asbg': asbgVal,
+    		'injtime': $('#txt-in-time').datetimepicker('getDate').getTime(),
+    		'isPainful': $('#chk-in-painful').is(':checked') ? 'yes' : 'no',
+    		'isBleeding': $('#chk-in-bleeding').is(':checked') ? 'yes' : 'no',
+    		'isRash': $('#chk-in-rash').is(':checked') ? 'yes' : 'no',
+    		'isErratic': $('#chk-in-erratic').is(':checked') ? 'yes' : 'no'
+    	};
+
+    	var newPostKey = null;
+    	var updates = {};
+			
+    	if (flowStatus == 1) 
+		{
+			newSiteData['locX'] = newSiteOffsetX;
+			newSiteData['locY'] = newSiteOffsetY;
+
+			newPostKey = firebase.database().ref().child('sites').push().key;
+			updates['/sites/' + newPostKey] = newSiteData;
+			console.log(firebase.database().ref().update(updates));
+		}
+		else if (flowStatus == 2) {
+			newSiteData['locX'] = userSitesData[editingSiteId]['locX'];
+			newSiteData['locY'] = userSitesData[editingSiteId]['locY'];
+
+			updates['/sites/' + editingSiteId] = newSiteData;
+			console.log(firebase.database().ref().update(updates));
+		}
+    	
+		switchPopupView(-1);
+    }
+
+    function removeSite(siteKey) {
+    	if (confirm("Are you sure to delete this site?")) {
+    		var updates = {};
+			updates['/sites/' + siteKey] = null;
+			console.log(firebase.database().ref().update(updates));
+    	}
+    }
+
+    function editSiteRecord(eleId)  {
+    	if (flowStatus != 2) {return;}
+
+    	var indexOfLimiter = eleId.indexOf('_');
+    	var siteId = eleId.substr(indexOfLimiter+1, eleId.length - indexOfLimiter + 1);
+    	editingSiteId = siteId;
+
+    	console.log(eleId + ":" + siteId);
+
+    	$('#txt-in-asbg').val(userSitesData[siteId]['asbg']);
+    	$('#txt-in-time').datetimepicker('setDate', ( new Date( userSitesData[siteId]['injtime'] ) ) );
+    	$('#chk-in-painful').prop('checked', userSitesData[siteId]['isPainful'] == 'yes' ? true : false);
+    	$('#chk-in-bleeding').prop('checked', userSitesData[siteId]['isBleeding'] == 'yes' ? true : false);
+    	$('#chk-in-rash').prop('checked', userSitesData[siteId]['isRash'] == 'yes' ? true : false);
+    	$('#chk-in-erratic').prop('checked', userSitesData[siteId]['isErratic'] == 'yes' ? true : false);
+
+    	$('#dlg-add-site').show();
+    } 
+
+    function selectTimeRange () {
+    	var startTime = $('#txt-review-start-time').datetimepicker('getDate').getTime();
+    	var endTime = $('#txt-review-end-time').datetimepicker('getDate').getTime();
+
+    	loadUserSites (startTime, endTime);
+    }
+/*-------------------end of button handlers------------------*/
+/*-----------------------start of auth---------------------------*/
     function handleSignin() {
     	var email = $('#txt-email').val();
         var password = $('#txt-pwd').val();
@@ -244,90 +369,11 @@
 	        // [END signout]
 	     }
     }
-
-    function saveNewSite() {
-    	if (!$('#txt-in-asbg').val()) {
-    		alert ("Please input valid ASBG value.");
-    		return;
-    	}
-
-    	if (!$('#txt-in-time').val()) {
-    		alert ("Please input valid date and time value.");
-    		return;
-    	}
-
-    	var asbgVal = $('#sel-in-unit').val() == 0 ? $('#txt-in-asbg').val() : $('#txt-in-asbg').val() * 18;
-    	
-    	var newSiteData = {
-    		'userid': firebase.auth().currentUser.uid,
-    		'asbg': asbgVal,
-    		'injtime': $('#txt-in-time').datetimepicker('getDate').getTime(),
-    		'isPainful': $('#chk-in-painful').is(':checked') ? 'yes' : 'no',
-    		'isBleeding': $('#chk-in-bleeding').is(':checked') ? 'yes' : 'no',
-    		'isRash': $('#chk-in-rash').is(':checked') ? 'yes' : 'no',
-    		'isErratic': $('#chk-in-erratic').is(':checked') ? 'yes' : 'no'
-    	};
-
-    	var newPostKey = null;
-    	var updates = {};
-			
-    	if (flowStatus == 1) 
-		{
-			newSiteData['locX'] = newSiteOffsetX;
-			newSiteData['locY'] = newSiteOffsetY;
-
-			newPostKey = firebase.database().ref().child('sites').push().key;
-			updates['/sites/' + newPostKey] = newSiteData;
-			console.log(firebase.database().ref().update(updates));
-		}
-		else if (flowStatus == 2) {
-			updates['/sites/' + editingSiteId] = newSiteData;
-			console.log(firebase.database().ref().update(updates));
-		}
-    	
-		switchPopupView(-1);
-    }
-
+/*-----------------------end of auth---------------------------*/
+/*--------------------start of utility functions------------------*/
     function cancelNewSite() {
     	editingPin.remove();
     	switchPopupView(-1);
-    }
-
-    function loadUserSites () {
-    	firebase.database().ref().child('sites').orderByChild("userid").equalTo(firebase.auth().currentUser.uid).on("child_added", function(snapshot) {
-		  		
-		  		userSitesData[snapshot.key] = snapshot.val();
-
-		  		var injtime = formatDate (new Date(snapshot.val().injtime));
-		  		var trHtml = 
-		  			"<tr id=trsite_" + snapshot.key + " onClick=editSiteRecord(this.id)><td>" + injtime  + "</td><td>" 
-		  			+ snapshot.val().asbg + "</td><td>" 
-		  			+ "mg/dl" + "</td><td>" 
-		  			+ getCheckboxHTML(snapshot.val().isPainful) + "</td><td>" 
-		  			+ getCheckboxHTML(snapshot.val().isBleeding) + "</td><td>" 
-		  			+ getCheckboxHTML(snapshot.val().isRash) + "</td><td>" 
-		  			+ getCheckboxHTML(snapshot.val().isErratic) + "</td>" 
-		  			+ "<td><a href='#' onClick=removeSite('"+ snapshot.key +"') >DELETE</a></td></tr>";
-		  		// $('#tbl-user-sites tbody').html($('#tbl-user-sites tbody').html() + trHtml);
-		  		$('#tbl-user-sites tbody').append(trHtml);
-
-		  		addPinOnImage(snapshot.val().locX, snapshot.val().locY);
-		});
-
-		firebase.database().ref().child('sites').orderByChild("userid").equalTo(firebase.auth().currentUser.uid).on("child_removed", function(snapshot) {
-
-			delete userSitesData[snapshot.key];
-
-			var trSite = $('#trsite_' + snapshot.key);
-			trSite.remove();
-		});
-
-		firebase.database().ref().child('sites').orderByChild("userid").equalTo(firebase.auth().currentUser.uid).on("child_changed", function(snapshot) {
-
-			userSitesData[snapshot.key] = snapshot.val();
-			var trSite = $('#trsite_' + snapshot.key);
-			trSite.remove();
-		});
     }
 
     function formatDate (dateVar) {
@@ -357,30 +403,4 @@
     	editingPin.css('top', posY);
     }
 
-    function removeSite(siteKey) {
-    	if (confirm("Are you sure to delete this site?")) {
-    		var updates = {};
-			updates['/sites/' + siteKey] = null;
-			console.log(firebase.database().ref().update(updates));
-    	}
-    }
-
-    function editSiteRecord(eleId)  {
-    	if (flowStatus != 2) {return;}
-
-    	var indexOfLimiter = eleId.indexOf('_');
-    	var siteId = eleId.substr(indexOfLimiter+1, eleId.length - indexOfLimiter + 1);
-    	editingSiteId = siteId;
-
-    	console.log(eleId + ":" + siteId);
-
-    	$('#txt-in-asbg').val(userSitesData[siteId]['asbg']);
-    	$('#txt-in-time').datetimepicker('setDate', ( new Date( userSitesData[siteId]['injtime'] ) ) );
-    	$('#chk-in-painful').prop('checked', userSitesData[siteId]['isPainful'] == 'yes' ? true : false);
-    	$('#chk-in-bleeding').prop('checked', userSitesData[siteId]['isBleeding'] == 'yes' ? true : false);
-    	$('#chk-in-rash').prop('checked', userSitesData[siteId]['isRash'] == 'yes' ? true : false);
-    	$('#chk-in-erratic').prop('checked', userSitesData[siteId]['isErratic'] == 'yes' ? true : false);
-
-
-    	$('#dlg-add-site').show();
-    } 
+/*------------------end of utility functions------------------*/		
