@@ -24,7 +24,7 @@ button.active {
     margin-left: 75px;
 }
 #img-body {
-	background-image: url("https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/586e8b8a29687f370f77d456/1483639705058/?format=1000w");
+	background-image: url("https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/5873a18229687f72381dee65/1483972997517/body_back.png");
 	background-color: #D8E6FC;
 	background-size: cover;
 	background-position: center;
@@ -94,7 +94,7 @@ button.active {
 	font-size: 14px;
 }
 #btn-close-dlg {
-	background-image: url("https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/586f144ebf629abf691ffe70/1483674708451/?format=300w");
+	background-image: url("https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/5873a19515d5db7187123bbd/1483973014105/close_btn.png");
 	background-size: cover;
 	background-position: center;
 	width: 30px;
@@ -104,11 +104,64 @@ button.active {
 	top: 0;
 	right: 0;
 }
-#site-pin-smp {
-	background-image: url("https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/58721096db29d687bc48e5cf/1483870363388/?format=100w");
+.site-pin {
+	background-image: url("https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/5873a165ff7c502f987988e3/1483972965363/black_pin.png");
 	background-size: cover;
 	background-position: center;
 	width: 25px;
 	height: 25px;
 	position: absolute;
 }
+#chart-bar {
+  	border: 1px solid #000;
+  	border-radius: 14px;
+  	width: 850px;
+    height: 120px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+}
+#chart-bar table {
+  	width: 800px;
+    height: 30px;
+    margin: 20px auto;
+}
+#chart-bar div {
+	border: 1px solid #000;
+    width: 50px;
+    height: 40px;
+    position: absolute;
+    top: 15px;
+    text-align: center;
+    background-color: white;
+    line-height: 40px;
+    vertical-align: middle;
+}
+#chart-bar p {
+	text-align: center;
+	line-height: 40px;
+}
+#td-area-green {
+  	width: 33.3%;
+  	background-color: #385723;
+}
+#td-area-blue {
+  	width: 33.3%;
+  	background-color: #1f4E79;
+}
+#td-area-red {
+  	background-color: #BF0000;
+}
+#overlay-min-mean {
+    left: 264px;
+}
+#overlay-max-mean {
+    left: 530px;
+}
+#tbl-user-sites {
+	text-align: center;
+}
+#tbl-user-sites thead tr {background-color: #CCC}
+#tbl-user-sites tbody tr:nth-child(even) {background-color: #DDD}
+#tbl-user-sites tbody tr:nth-child(odd) {background-color: #FFF}
+#tbl-user-sites tbody tr:hover {background-color: #CCC}

@@ -65,6 +65,12 @@
 				<p><button id="btn-smb-reg-user" onClick="sendPasswordReset()">Send</button></p>
 				<div id="btn-close-dlg" onClick="switchPopupView(-1)"></div>
 			</div>
+			<div id="dlg-review-time" class="ins_popup" style="height:150px;">
+				<p><input id="txt-review-start-time" style="width:240px;margin:auto;"/></p>
+				<p><input id="txt-review-end-time" style="width:240px;margin:auto;"/></p>
+				<p><button id="btn-sel-review-time" onClick=selectTimeRange()>SELECT</button></p>
+				<div id="btn-close-dlg" onClick="switchPopupView(-1)"></div>
+			</div>
 			<div id="dlg-add-site" class="ins_popup" style="height:200px;padding:10px;">
 				<table>
 					<tr>
@@ -88,11 +94,22 @@
 					</tr>
 				</table>
 			</div>
+			<div id="chart-bar">
+				<table><tr>
+				  	<td id="td-area-green"></td>
+				    <td id="td-area-blue"></td>
+				    <td id="td-area-red"></td>
+				</tr></table>
+			  	<div id="overlay-min-mean">_ _ _</div>
+			  	<div id="overlay-max-mean">_ _ _</div>
+			  	<p id="info-review"></p>
+			</div>
 			<div>
-				<table border=1 id="tbl-user-sites">
+				<table border=0 id="tbl-user-sites">
 					<thead>
 						<tr>
-							<th>Date</th><th>ASBG</th><th>mg/dl</th><th>Pain</th><th>Bleeding</th><th>Rash</th><th>Erratic BG</th>
+							<th>Date</th><th>ASBG</th><th><select id="th-sel-unit" onChange="reviewUnitChange()"></select></th>
+							<th>Pain</th><th>Bleeding</th><th>Rash</th><th>Erratic BG</th><th></th><th></th>
 						</tr>
 					</thead>
 					<tbody></tbody>

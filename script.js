@@ -1,5 +1,5 @@
 
-	var viewIDs = ['#dlg-login', '#dlg-reg-user', '#dlg-reset-pwd', '#dlg-add-site']; //layout IDs for dialogs
+	var viewIDs = ['#dlg-login', '#dlg-reg-user', '#dlg-reset-pwd', '#dlg-add-site', '#dlg-review-time']; //layout IDs for dialogs
 	var asbgUnits = ['mg/dl', 'mmol/L'];
 	var flowStatusNames = ["loggedin", "addsite", "review"];	//flow status names
 	var flowStatus = 0;
@@ -16,7 +16,7 @@
 		switchPopupView(-1);
 
 		$.each(asbgUnits, function(key, value) {   
-		     $('#sel-in-unit')
+		     $('#sel-in-unit,#th-sel-unit')
 		         .append($("<option></option>")
 		                    .attr("value",key)
 		                    .text(value)); 
@@ -27,6 +27,18 @@
 		});
 
 		$('#txt-in-time').datetimepicker({
+			controlType: 'select',
+			oneLine: true,
+			dateFormat: 'M.d yy,', 
+			timeFormat: 'h:mm tt'
+		});
+		$('#txt-review-start-time').datetimepicker({
+			controlType: 'select',
+			oneLine: true,
+			dateFormat: 'M.d yy,', 
+			timeFormat: 'h:mm tt'
+		});
+		$('#txt-review-end-time').datetimepicker({
 			controlType: 'select',
 			oneLine: true,
 			dateFormat: 'M.d yy,', 
@@ -56,11 +68,15 @@
 
 	function switchFlowStatus (stat) {
 		flowStatus = stat;
+		$('#mnu-logged button').removeClass('active');
 		if (stat == 1) {
 			$('#btn-stat-addsite').addClass('active');
 		}
-		else {
-			$('#btn-stat-addsite').removeClass('active');	
+		else if (stat ==2) {
+			$('#btn-stat-review').addClass('active');
+			$('#txt-review-start-time').datetimepicker('setDate', new Date( (new Date()).getTime() - 1000*3600*24*28 ) );
+			$('#txt-review-end-time').datetimepicker('setDate', new Date( ) );
+			switchPopupView(4);
 		}
 	} 
 
@@ -92,7 +108,7 @@
 	    			$('#mnu-logged').show();
 	    			$('#alt-verify').html("");
 
-	    			loadUserSites();
+	    			loadUserSites((new Date()).getTime() - 1000*3600*24*28, (new Date()).getTime());
     			}
     			else {
     				$('#mnu-login').show();
@@ -107,28 +123,38 @@
     	});
     }
 
-    function loadUserSites (startTime, endTime) {
+    function loadUserSites (startTimestmap, endTimestamp) {
+    	userSitesData = {};
+    	$('#tbl-user-sites tbody').html('');
+
     	firebase.database().ref().child('sites')
     	.orderByChild("userid").equalTo(firebase.auth().currentUser.uid)
-    	.orderByChild('injtime').startAt(startTime).endAt(endTime)
+    	// .orderByChild('injtime').startAt(startTimestmap).endAt(endTimestamp)
     	.on("child_added", function(snapshot) {
 		  		
-		  		userSitesData[snapshot.key] = snapshot.val();
+	  		if (snapshot.val().injtime < startTimestmap || snapshot.val().injtime > endTimestamp)
+	  			return;
 
-		  		var injtime = formatDate (new Date(snapshot.val().injtime));
-		  		var trHtml = 
-		  			"<tr id=trsite_" + snapshot.key + " onClick=editSiteRecord(this.id)><td>" + injtime  + "</td><td>" 
-		  			+ snapshot.val().asbg + "</td><td>" 
-		  			+ "mg/dl" + "</td><td>" 
-		  			+ getCheckboxHTML(snapshot.val().isPainful) + "</td><td>" 
-		  			+ getCheckboxHTML(snapshot.val().isBleeding) + "</td><td>" 
-		  			+ getCheckboxHTML(snapshot.val().isRash) + "</td><td>" 
-		  			+ getCheckboxHTML(snapshot.val().isErratic) + "</td>" 
-		  			+ "<td><a href='#' onClick=removeSite('"+ snapshot.key +"') >DELETE</a></td></tr>";
-		  		// $('#tbl-user-sites tbody').html($('#tbl-user-sites tbody').html() + trHtml);
-		  		$('#tbl-user-sites tbody').append(trHtml);
+	  		userSitesData[snapshot.key] = snapshot.val();
 
-		  		addPinOnImage(snapshot.val().locX, snapshot.val().locY);
+	  		var injtime = formatDate (new Date(snapshot.val().injtime));
+	  		var trHtml = 
+	  			"<tr id=trsite_" + snapshot.key + " onDblClick=editSiteRecord(this.id)><td>" + injtime  + "</td><td>" 
+	  			+ ($('#th-sel-unit').val() == 0 ? snapshot.val().asbg : Math.round(snapshot.val().asbg/18)) + "</td><td>" 
+	  			+ $('#th-sel-unit option:selected').text() + "</td><td>" 
+	  			+ getCheckboxHTML(snapshot.val().isPainful) + "</td><td>" 
+	  			+ getCheckboxHTML(snapshot.val().isBleeding) + "</td><td>" 
+	  			+ getCheckboxHTML(snapshot.val().isRash) + "</td><td>" 
+	  			+ getCheckboxHTML(snapshot.val().isErratic) + "</td>" 
+	  			+ "<td><a href='#' onClick=editSiteRecord('"+ snapshot.key +"') >CHANGE</a></td>"
+	  			+ "<td><a href='#' onClick=removeSite('"+ snapshot.key +"') >DELETE</a></td></tr>";
+	  		// $('#tbl-user-sites tbody').html($('#tbl-user-sites tbody').html() + trHtml);
+	  		$('#tbl-user-sites tbody').append(trHtml);
+
+	  		$('#pin_' + snapshot.key).remove();
+	  		var pin = addPinOnImage(snapshot.val().locX, snapshot.val().locY);
+	  		pin.attr('id', 'pin_' + snapshot.key);
+	  		evaluateAreas();
 		});
 
 		firebase.database().ref().child('sites').orderByChild("userid").equalTo(firebase.auth().currentUser.uid).on("child_removed", function(snapshot) {
@@ -149,6 +175,50 @@
 			tdsInChangeRow[5].innerHTML = getCheckboxHTML(snapshot.val().isRash);
 			tdsInChangeRow[6].innerHTML = getCheckboxHTML(snapshot.val().isErratic);
 		});
+    }
+
+    function evaluateAreas() {
+    	var objSize = Object.keys(userSitesData).length;
+    	if (objSize < 3) { return; }
+    	var asbgSum = 0;
+    	var minAsbg = 1000;
+    	for (var key in userSitesData) {
+    		asbgSum += parseInt (userSitesData[key]['asbg']);
+    		if (userSitesData[key]['asbg'] < minAsbg)
+    			minAsbg = userSitesData[key]['asbg'];
+    	}
+    		
+    	var mean = asbgSum / objSize;
+    	var distSum = 0;
+    	for (var key in userSitesData) {
+    		distSum += (mean - userSitesData[key]['asbg']) * (mean - userSitesData[key]['asbg']);
+    	}
+    	var deviation =  Math.sqrt(distSum / (objSize - 1));
+
+    	$('#overlay-min-mean').html(Math.round(mean - deviation));
+    	$('#overlay-max-mean').html(Math.round(mean + deviation));
+    	$('#info-review').html("Mean: " + Math.round(mean) + " mg/dl &emsp;" + "Standard Deviation: " + Math.round(deviation));
+
+    	for (var key in userSitesData) {
+    		var pin = $('#pin_' + key);
+    		var imgURL = '';
+    		if (userSitesData[key]['asbg'] < mean - deviation)
+    			imgURL = 'https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/5873a1a4b3db2b522257b60c/1483973028286/green_pin.png';
+    		else if (userSitesData[key]['asbg'] > mean + deviation)
+    			imgURL = 'https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/5873a1aebebafb70ccf50fac/1483973038876/red_pin.png';
+    		else
+    			imgURL = 'https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/5873a1709f7456f75fb44e2b/1483972976488/blue_pin.png';
+    		pin.css('background-image', "url('" + imgURL +"')");
+    	}
+    }
+
+    function reviewUnitChange () {
+    	
+    	for (var key in userSitesData) {
+    		var tdsInChangeRow = $('#trsite_' + key + ' td');
+    		tdsInChangeRow[1].innerHTML = $('#th-sel-unit').val() == 0 ? userSitesData[key]['asbg'] : Math.round(userSitesData[key]['asbg']/18);
+    		tdsInChangeRow[2].innerHTML = $('#th-sel-unit option:selected').text();
+    	}
     }
 /*----------------------start of button handlers--------------------*/
     function saveNewSite() {
@@ -205,14 +275,12 @@
     	}
     }
 
-    function editSiteRecord(eleId)  {
-    	if (flowStatus != 2) {return;}
+    function editSiteRecord(siteId)  {
+    	// if (flowStatus != 2) {return;}
 
-    	var indexOfLimiter = eleId.indexOf('_');
-    	var siteId = eleId.substr(indexOfLimiter+1, eleId.length - indexOfLimiter + 1);
+    	// var indexOfLimiter = eleId.indexOf('_');
+    	// var siteId = eleId.substr(indexOfLimiter+1, eleId.length - indexOfLimiter + 1);
     	editingSiteId = siteId;
-
-    	console.log(eleId + ":" + siteId);
 
     	$('#txt-in-asbg').val(userSitesData[siteId]['asbg']);
     	$('#txt-in-time').datetimepicker('setDate', ( new Date( userSitesData[siteId]['injtime'] ) ) );
@@ -229,6 +297,7 @@
     	var endTime = $('#txt-review-end-time').datetimepicker('getDate').getTime();
 
     	loadUserSites (startTime, endTime);
+    	switchPopupView(-1);
     }
 /*-------------------end of button handlers------------------*/
 /*-----------------------start of auth---------------------------*/
@@ -401,6 +470,7 @@
     	editingPin.show();
     	editingPin.css('left', posX);
     	editingPin.css('top', posY);
+    	return editingPin;
     }
 
 /*------------------end of utility functions------------------*/		
