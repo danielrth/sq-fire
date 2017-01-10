@@ -136,33 +136,33 @@
 	  			return;
 
 	  		userSitesData[snapshot.key] = snapshot.val();
+	  		drawTableFromArray();
+	  		// var injtime = formatDate (new Date(snapshot.val().injtime));
+	  		// var trHtml = 
+	  		// 	"<tr id=trsite_" + snapshot.key + " onClick=highlightSite(this)><td>" + injtime  + "</td><td>" 
+	  		// 	+ ($('#th-sel-unit').val() == 0 ? snapshot.val().asbg : Math.round(snapshot.val().asbg/18)) + "</td><td>" 
+	  		// 	+ $('#th-sel-unit option:selected').text() + "</td><td>" 
+	  		// 	+ (snapshot.val().isPainful=='yes' ? 'X':'') + "</td><td>" 
+	  		// 	+ (snapshot.val().isBleeding=='yes' ? 'X':'') + "</td><td>" 
+	  		// 	+ (snapshot.val().isRash=='yes' ? 'X':'') + "</td><td>" 
+	  		// 	+ (snapshot.val().isErratic=='yes' ? 'X':'') + "</td><td>"
+	  		// 	+ "<a href='#' onClick=editSiteRecord('"+ snapshot.key +"') >CHANGE</a></td><td>"
+	  		// 	+ "<a href='#' onClick=removeSite('"+ snapshot.key +"') >DELETE</a></td></tr>";
+	  		// // $('#tbl-user-sites tbody').html($('#tbl-user-sites tbody').html() + trHtml);
+	  		// $('#tbl-user-sites tbody').append(trHtml);
 
-	  		var injtime = formatDate (new Date(snapshot.val().injtime));
-	  		var trHtml = 
-	  			"<tr id=trsite_" + snapshot.key + " onDblClick=editSiteRecord(this.id)><td>" + injtime  + "</td><td>" 
-	  			+ ($('#th-sel-unit').val() == 0 ? snapshot.val().asbg : Math.round(snapshot.val().asbg/18)) + "</td><td>" 
-	  			+ $('#th-sel-unit option:selected').text() + "</td><td>" 
-	  			+ getCheckboxHTML(snapshot.val().isPainful) + "</td><td>" 
-	  			+ getCheckboxHTML(snapshot.val().isBleeding) + "</td><td>" 
-	  			+ getCheckboxHTML(snapshot.val().isRash) + "</td><td>" 
-	  			+ getCheckboxHTML(snapshot.val().isErratic) + "</td>" 
-	  			+ "<td><a href='#' onClick=editSiteRecord('"+ snapshot.key +"') >CHANGE</a></td>"
-	  			+ "<td><a href='#' onClick=removeSite('"+ snapshot.key +"') >DELETE</a></td></tr>";
-	  		// $('#tbl-user-sites tbody').html($('#tbl-user-sites tbody').html() + trHtml);
-	  		$('#tbl-user-sites tbody').append(trHtml);
-
-	  		$('#pin_' + snapshot.key).remove();
-	  		var pin = addPinOnImage(snapshot.val().locX, snapshot.val().locY);
-	  		pin.attr('id', 'pin_' + snapshot.key);
-	  		evaluateAreas();
+	  		// $('#pin_' + snapshot.key).remove();
+	  		// var pin = addPinOnImage(snapshot.val().locX, snapshot.val().locY);
+	  		// pin.attr('id', 'pin_' + snapshot.key);
+	  		// evaluateAreas();
 		});
 
 		firebase.database().ref().child('sites').orderByChild("userid").equalTo(firebase.auth().currentUser.uid).on("child_removed", function(snapshot) {
 
 			delete userSitesData[snapshot.key];
 
-			var trSite = $('#trsite_' + snapshot.key);
-			trSite.remove();
+			$('#trsite_' + snapshot.key).remove();
+			$('#pin_' + snapshot.key).remove();
 		});
 
 		firebase.database().ref().child('sites').orderByChild("userid").equalTo(firebase.auth().currentUser.uid).on("child_changed", function(snapshot) {
@@ -170,11 +170,37 @@
 			userSitesData[snapshot.key] = snapshot.val();
 			var tdsInChangeRow = $('#trsite_' + snapshot.key + ' td');
 			tdsInChangeRow[1].innerHTML = snapshot.val().asbg;
-			tdsInChangeRow[3].innerHTML = getCheckboxHTML(snapshot.val().isPainful);
-			tdsInChangeRow[4].innerHTML = getCheckboxHTML(snapshot.val().isBleeding);
-			tdsInChangeRow[5].innerHTML = getCheckboxHTML(snapshot.val().isRash);
-			tdsInChangeRow[6].innerHTML = getCheckboxHTML(snapshot.val().isErratic);
+			tdsInChangeRow[3].innerHTML = snapshot.val().isPainful=='yes' ? 'X':'';
+			tdsInChangeRow[4].innerHTML = snapshot.val().isBleeding=='yes' ? 'X':'';
+			tdsInChangeRow[5].innerHTML = snapshot.val().isRash=='yes' ? 'X':'';
+			tdsInChangeRow[6].innerHTML = snapshot.val().isErratic=='yes' ? 'X':'';
 		});
+    }
+
+    function drawTableFromArray() {
+    	$('#tbl-user-sites tbody').html('');
+    	$('.site-pin:not(#site-pin-smp)').remove();
+
+    	var trHtml = '';
+    	for (var key in userSitesData) {
+    		var injtime = formatDate (new Date(userSitesData[key]['injtime']));
+	  		trHtml += 
+	  			"<tr id=trsite_" + key + " onClick=highlightSite(this)><td>" + injtime  + "</td><td>" 
+	  			+ ($('#th-sel-unit').val() == 0 ? userSitesData[key]['asbg'] : Math.round(userSitesData[key]['asbg']/18)) + "</td><td>" 
+	  			+ $('#th-sel-unit option:selected').text() + "</td><td>" 
+	  			+ (userSitesData[key]['isPainful']=='yes' ? 'X':'') + "</td><td>" 
+	  			+ (userSitesData[key]['isBleeding']=='yes' ? 'X':'') + "</td><td>" 
+	  			+ (userSitesData[key]['isRash']=='yes' ? 'X':'') + "</td><td>" 
+	  			+ (userSitesData[key]['isErratic']=='yes' ? 'X':'') + "</td><td>"
+	  			+ "<a href='#' onClick=editSiteRecord('"+ key +"') >CHANGE</a></td><td>"
+	  			+ "<a href='#' onClick=removeSite('"+ key +"') >DELETE</a></td></tr>";
+
+	  		var pin = addPinOnImage(userSitesData[key]['locX'], userSitesData[key]['locY']);
+	  		pin.attr('id', 'pin_' + key);
+    	}
+
+	  	evaluateAreas();
+    	$('#tbl-user-sites tbody').html(trHtml);
     }
 
     function evaluateAreas() {
@@ -292,12 +318,39 @@
     	$('#dlg-add-site').show();
     } 
 
+    function highlightSite(eleTr) {
+    	var eleId = eleTr.id;
+    	var indexOfLimiter = eleId.indexOf('_');
+    	var siteId = eleId.substr(indexOfLimiter+1, eleId.length - indexOfLimiter + 1);
+    	var elePin = $('#pin_' + siteId);
+
+    	if (eleTr.className == 'active') {
+    		eleTr.className = '';
+    		elePin.removeClass('site_pin_active');
+    	}
+    	else {
+    		eleTr.className = 'active';
+    		elePin.addClass('site_pin_active');	
+    	}
+    }
+
+    function downlightSite(eleId) {
+    	var indexOfLimiter = eleId.indexOf('_');
+    	var siteId = eleId.substr(indexOfLimiter+1, eleId.length - indexOfLimiter + 1);
+    	var elePin = $('#pin_' + siteId);
+    	elePin.removeClass('site_pin_active');
+    }
+
     function selectTimeRange () {
     	var startTime = $('#txt-review-start-time').datetimepicker('getDate').getTime();
     	var endTime = $('#txt-review-end-time').datetimepicker('getDate').getTime();
 
     	loadUserSites (startTime, endTime);
     	switchPopupView(-1);
+    }
+
+    function sortTable(fieldNum) {
+    	
     }
 /*-------------------end of button handlers------------------*/
 /*-----------------------start of auth---------------------------*/
@@ -457,10 +510,6 @@
 		return monthNames[monthIndex] + '. ' + day + ', ' + year;
     }
 
-    function getCheckboxHTML(varBool) {
-    	return "<input type='checkbox' onclick='return false;' " + (varBool=='yes'?'checked':'') + " />";
-    }
-
     function addPinOnImage(offsetX, offsetY) {
     	var posX = offsetX + imageMargin - $('#site-pin-smp').width()/2,
             posY = offsetY + imageMargin - $('#site-pin-smp').height()/2;
@@ -470,6 +519,7 @@
     	editingPin.show();
     	editingPin.css('left', posX);
     	editingPin.css('top', posY);
+    	$('#site-pin-smp').hide();
     	return editingPin;
     }
 

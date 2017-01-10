@@ -161,7 +161,12 @@ button.active {
 #tbl-user-sites {
 	text-align: center;
 }
-#tbl-user-sites thead tr {background-color: #CCC}
+#tbl-user-sites thead tr {background-color: #AAA}
 #tbl-user-sites tbody tr:nth-child(even) {background-color: #DDD}
 #tbl-user-sites tbody tr:nth-child(odd) {background-color: #FFF}
-#tbl-user-sites tbody tr:hover {background-color: #CCC}
+#tbl-user-sites tbody tr:hover {background-color: #AAA}
+#tbl-user-sites tbody tr.active {background-color: #AAA}
+.site_pin_active {
+	border: 1px solid white;
+    border-radius: 4px;
+}
