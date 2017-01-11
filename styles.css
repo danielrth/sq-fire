@@ -160,8 +160,10 @@ button.active {
 }
 #tbl-user-sites {
 	text-align: center;
+	width: 850px;
 }
-#tbl-user-sites thead tr {background-color: #AAA}
+#tbl-user-sites thead tr {background-color: #AAA;}
+#tbl-user-sites thead span {cursor: pointer;}
 #tbl-user-sites tbody tr:nth-child(even) {background-color: #DDD}
 #tbl-user-sites tbody tr:nth-child(odd) {background-color: #FFF}
 #tbl-user-sites tbody tr:hover {background-color: #AAA}
@@ -169,4 +171,11 @@ button.active {
 .site_pin_active {
 	border: 1px solid white;
     border-radius: 4px;
+}
+
+#overlay-max-mean input,#overlay-min-mean input {
+	width: 100%;
+	height: 100%;
+	font-size: 18px;
+	text-align: center;
 }

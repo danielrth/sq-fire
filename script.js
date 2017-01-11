@@ -9,6 +9,9 @@ var newSiteOffsetY = -50;
 var editingPin = null;
 var editingSiteId = null;
 var userSitesData = {};
+var greenPinURL = 'https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/5873a1a4b3db2b522257b60c/1483973028286/green_pin.png';
+var bluePinURL = 'https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/5873a1709f7456f75fb44e2b/1483972976488/blue_pin.png';
+var redPinURL = 'https://static1.squarespace.com/static/53716c1de4b07f5891299dc4/t/5873a1aebebafb70ccf50fac/1483973038876/red_pin.png';
 
 $(document).ready(function() {
 
@@ -64,6 +67,39 @@ $(document).ready(function() {
 		}
 	});
 
+	$(document).on("click", ".check_property", function(){
+		var indexOfLimiter = this.id.indexOf('_');
+		var fieldName = this.id.substr(indexOfLimiter+1, this.id.length - indexOfLimiter + 1);
+
+		drawTableFromArray(fieldName, this.checked ? 1:0);
+		console.log(this.checked);
+	});
+
+	$('#overlay-min-mean input').keyup(function () { 
+	    this.value = this.value.replace(/[^0-9\.]/g,'');
+	    for (var key in userSitesData) {
+			var pin = $('#pin_' + key);
+			if (userSitesData[key]['asbg'] < this.value)
+				pin.css('background-image', "url('" + greenPinURL +"')");
+			else if (userSitesData[key]['asbg'] > $('#overlay-max-mean input').val())
+				pin.css('background-image', "url('" + redPinURL +"')");
+			else
+				pin.css('background-image', "url('" + bluePinURL +"')");
+		}
+	});
+
+	$('#overlay-max-mean input').keyup(function () { 
+	    this.value = this.value.replace(/[^0-9\.]/g,'');
+	    for (var key in userSitesData) {
+			var pin = $('#pin_' + key);
+			if (userSitesData[key]['asbg'] < $('#overlay-min-mean input').val())
+				pin.css('background-image', "url('" + greenPinURL +"')");
+			else if (userSitesData[key]['asbg'] > this.value)
+				pin.css('background-image', "url('" + redPinURL +"')");
+			else
+				pin.css('background-image', "url('" + bluePinURL +"')");
+		}
+	});
 });
 
 function switchFlowStatus (stat) {
@@ -136,7 +172,7 @@ function loadUserSites (startTimestmap, endTimestamp) {
   			return;
 
   		userSitesData[snapshot.key] = snapshot.val();
-  		drawTableFromArray();
+  		drawTableFromArray('injtime', -1);
   		// var injtime = formatDate (new Date(snapshot.val().injtime));
   		// var trHtml = 
   		// 	"<tr id=trsite_" + snapshot.key + " onClick=highlightSite(this)><td>" + injtime  + "</td><td>" 
@@ -177,30 +213,70 @@ function loadUserSites (startTimestmap, endTimestamp) {
 	});
 }
 
-function drawTableFromArray() {
-	$('#tbl-user-sites tbody').html('');
+var sortKey = 'injtime';
+var sortDir = 1;
+function drawTableFromArray(fieldName, hasFilter) {
+
+	if (hasFilter == -1) {
+		if (fieldName == sortKey)	sortDir *= -1;
+		else sortDir = 1;
+		sortKey = fieldName;
+	}
+
+	var filteredKeys = Object.keys(userSitesData).sort(function(x, y)
+    {
+    	if (userSitesData[x][sortKey] == 'yes' || userSitesData[x][sortKey] == 'no')
+    		return userSitesData[x][sortKey] > userSitesData[y][sortKey] ? sortDir : sortDir * -1;
+    	return (userSitesData[x][sortKey] - userSitesData[y][sortKey]) * sortDir; 
+ 	});
+
 	$('.site-pin:not(#site-pin-smp)').remove();
 
 	var trHtml = '';
-	for (var key in userSitesData) {
-		var injtime = formatDate (new Date(userSitesData[key]['injtime']));
-  		trHtml += 
-  			"<tr id=trsite_" + key + " onClick=highlightSite(this)><td>" + injtime  + "</td><td>" 
-  			+ ($('#th-sel-unit').val() == 0 ? userSitesData[key]['asbg'] : Math.round(userSitesData[key]['asbg']/18)) + "</td><td>" 
-  			+ $('#th-sel-unit option:selected').text() + "</td><td>" 
-  			+ (userSitesData[key]['isPainful']=='yes' ? 'X':'') + "</td><td>" 
-  			+ (userSitesData[key]['isBleeding']=='yes' ? 'X':'') + "</td><td>" 
-  			+ (userSitesData[key]['isRash']=='yes' ? 'X':'') + "</td><td>" 
-  			+ (userSitesData[key]['isErratic']=='yes' ? 'X':'') + "</td><td>"
-  			+ "<a href='#' onClick=editSiteRecord('"+ key +"') >CHANGE</a></td><td>"
-  			+ "<a href='#' onClick=removeSite('"+ key +"') >DELETE</a></td></tr>";
+    for (var i=0; i<filteredKeys.length; i++) {
+    	if ((hasFilter == 0 && userSitesData[filteredKeys[i]][fieldName] == 'yes') || 
+    		(hasFilter == 1 && userSitesData[filteredKeys[i]][fieldName] == 'no'))
+    		continue;
 
-  		var pin = addPinOnImage(userSitesData[key]['locX'], userSitesData[key]['locY']);
-  		pin.attr('id', 'pin_' + key);
-	}
+    	var injtime = formatDate (new Date(userSitesData[filteredKeys[i]]['injtime']));
+  		trHtml += 
+  			"<tr id=trsite_" + filteredKeys[i] + " onClick=highlightSite(this)><td>" + injtime  + "</td><td>" 
+  			+ ($('#th-sel-unit').val() == 0 ? userSitesData[filteredKeys[i]]['asbg'] : Math.round(userSitesData[filteredKeys[i]]['asbg']/18)) + "</td><td>" 
+  			+ $('#th-sel-unit option:selected').text() + "</td><td>" 
+  			+ (userSitesData[filteredKeys[i]]['isPainful']=='yes' ? 'X':'') + "</td><td>" 
+  			+ (userSitesData[filteredKeys[i]]['isBleeding']=='yes' ? 'X':'') + "</td><td>" 
+  			+ (userSitesData[filteredKeys[i]]['isRash']=='yes' ? 'X':'') + "</td><td>" 
+  			+ (userSitesData[filteredKeys[i]]['isErratic']=='yes' ? 'X':'') + "</td><td>"
+  			+ "<a href='#' onClick=editSiteRecord('"+ filteredKeys[i] +"') >CHANGE</a></td><td>"
+  			+ "<a href='#' onClick=removeSite('"+ filteredKeys[i] +"') >DELETE</a></td></tr>";
+
+  		var pin = addPinOnImage(userSitesData[filteredKeys[i]]['locX'], userSitesData[filteredKeys[i]]['locY']);
+  		pin.attr('id', 'pin_' + filteredKeys[i]);
+    }
+    
+ //    filteredSitesData[filteredKeys[i]] = userSitesData[filteredKeys[i]];
+
+	// var trHtml = '';
+	// for (var key in userSitesData) {
+	// 	var injtime = formatDate (new Date(userSitesData[key]['injtime']));
+ //  		trHtml += 
+ //  			"<tr id=trsite_" + key + " onClick=highlightSite(this)><td>" + injtime  + "</td><td>" 
+ //  			+ ($('#th-sel-unit').val() == 0 ? userSitesData[key]['asbg'] : Math.round(userSitesData[key]['asbg']/18)) + "</td><td>" 
+ //  			+ $('#th-sel-unit option:selected').text() + "</td><td>" 
+ //  			+ (userSitesData[key]['isPainful']=='yes' ? 'X':'') + "</td><td>" 
+ //  			+ (userSitesData[key]['isBleeding']=='yes' ? 'X':'') + "</td><td>" 
+ //  			+ (userSitesData[key]['isRash']=='yes' ? 'X':'') + "</td><td>" 
+ //  			+ (userSitesData[key]['isErratic']=='yes' ? 'X':'') + "</td><td>"
+ //  			+ "<a href='#' onClick=editSiteRecord('"+ key +"') >CHANGE</a></td><td>"
+ //  			+ "<a href='#' onClick=removeSite('"+ key +"') >DELETE</a></td></tr>";
+
+ //  		var pin = addPinOnImage(userSitesData[key]['locX'], userSitesData[key]['locY']);
+ //  		pin.attr('id', 'pin_' + key);
+	// }
 
   	evaluateAreas();
 	$('#tbl-user-sites tbody').html(trHtml);
+
 }
 
 function evaluateAreas() {
@@ -221,8 +297,8 @@ function evaluateAreas() {
 	}
 	var deviation =  Math.sqrt(distSum / (objSize - 1));
 
-	$('#overlay-min-mean').html(Math.round(mean - deviation));
-	$('#overlay-max-mean').html(Math.round(mean + deviation));
+	$('#overlay-min-mean input').val(Math.round(mean - deviation));
+	$('#overlay-max-mean input').val(Math.round(mean + deviation));
 	$('#info-review').html("Mean: " + Math.round(mean) + " mg/dl &emsp;" + "Standard Deviation: " + Math.round(deviation));
 
 	for (var key in userSitesData) {
@@ -334,13 +410,6 @@ function highlightSite(eleTr) {
 	}
 }
 
-function downlightSite(eleId) {
-	var indexOfLimiter = eleId.indexOf('_');
-	var siteId = eleId.substr(indexOfLimiter+1, eleId.length - indexOfLimiter + 1);
-	var elePin = $('#pin_' + siteId);
-	elePin.removeClass('site_pin_active');
-}
-
 function selectTimeRange () {
 	var startTime = $('#txt-review-start-time').datetimepicker('getDate').getTime();
 	var endTime = $('#txt-review-end-time').datetimepicker('getDate').getTime();
@@ -349,8 +418,13 @@ function selectTimeRange () {
 	switchPopupView(-1);
 }
 
-function sortTable(fieldNum) {
-	
+function sortTable(fieldName) {
+	var filteredSitesData = {};
+	var filteredKeys = Object.keys(userSitesData).sort(function(x, y)
+    { return userSitesData[x][fieldName] - userSitesData[y][fieldName]; })
+    for (var i=0; i<filteredKeys.length; i++)
+    	filteredSitesData[filteredKeys[i]] = userSitesData[filteredKeys[i]];
+    console.log(filteredSitesData);
 }
 /*-------------------end of button handlers------------------*/
 /*-----------------------start of auth---------------------------*/

@@ -100,16 +100,23 @@
 				    <td id="td-area-blue"></td>
 				    <td id="td-area-red"></td>
 				</tr></table>
-			  	<div id="overlay-min-mean">_ _ _</div>
-			  	<div id="overlay-max-mean">_ _ _</div>
+			  	<div id="overlay-min-mean"><input type=text value="_ _ _" /></div>
+			  	<div id="overlay-max-mean"><input type=text value="_ _ _" /></div>
 			  	<p id="info-review"></p>
 			</div>
 			<div>
 				<table border=0 id="tbl-user-sites">
 					<thead>
 						<tr>
-							<th>Date</th><th>ASBG</th><th><select id="th-sel-unit" onChange="reviewUnitChange()"></select></th>
-							<th>Pain</th><th>Bleeding</th><th>Rash</th><th>Erratic BG</th><th>Change</th><th>Delete</th>
+							<th onClick="drawTableFromArray('injtime',-1)"><span>Date</span></th>
+							<th onClick="drawTableFromArray('asbg',-1)"><span>ASBG</span></th>
+							<th><select id="th-sel-unit" onChange="reviewUnitChange()"></select></th>
+							<th><span onClick="drawTableFromArray('isPainful',-1)">Pain</span><input type='checkbox' class='check_property' id="chk_isPainful"  /></th>
+							<th><span onClick="drawTableFromArray('isBleeding',-1)">Bleeding</span><input type='checkbox' class='check_property' id="chk_isBleeding" /></th>
+							<th><span onClick="drawTableFromArray('isRash',-1)">Rash</span><input type='checkbox' class='check_property' id="chk_isRash" /></th>
+							<th><span onClick="drawTableFromArray('isErratic,-1')">Erratic BG</span><input type='checkbox' class='check_property' id="chk_isErratic" /></th>
+							<th>Change</th>
+							<th>Delete</th>
 						</tr>
 					</thead>
 					<tbody></tbody>
